@@ -41,30 +41,27 @@ First, we rank all the features by its $P_{ij}$ for each entity $j$, so obtainin
 %\subsection{Single marker rank statistics}
 For each feature $i,i=1..k$, we obtain a vector $r_{ij}, j=1..n$. There are normalised ranks of the feature in different entities, in the a null hypothesis they are uniformly i.i.d. in [0,1]. Let's create a rank statistics $u_i$ by ordering their values. If a feature is a unique marker for an entity, the entity corresponds to the first  value $u_1$. Let's use the difference $u_2-u_1$ as a measure of uniqueness (quality of the marker). Indeed, if we see that the difference is significantly higher than we can expect if null hypothesis holds, we can conclude that the feature unexpectedly prefer the entity, so it is a marker (and the entity is its best friend). Similarly to the density estimation for each $u_i$ (see, e.g. \cite{Gut:2009}) we estimate the probability to observe the difference $u_2 - u_1 \ge t$. 
 
-First, the whole n-dimension (nD) volume of ranked variables $u_1 .. u_n$ is:
+First, the whole $n$-dimension volume of $n$ ranked variables $u_1 .. u_n$ is:
 \begin{eqnarray*}
 V = &\displaystyle \int_0^1\int_{u_1}^1\int_{u_2}^1\int_{u_3}^1...\int_{u_{n-1}}^1 du_n....du_4 du_3 du_2 du_1 =  \frac{1}{n!}
 \end{eqnarray*}
-.
-
 Let's denote the p-value for the observation $t=u_2-u_1$ as $p_1(t)$. $p_1(t)$ is the ratio of nD, that is limited by $t<=u_2-u_1$ condition, and $V$.
-
 \begin{eqnarray*}
-p(t) = & \displaystyle\frac{1}{V} \displaystyle \int_0^{1-t}\int_{{u_1}+t}^1\int_{u_2}^1\int_{u_3}^1...\int_{u_{n-1}}^1 du_n....du_4 du_3 du_2 du_1 = (1-t)^n
+p_1(t) = & \displaystyle\frac{1}{V} \displaystyle \int_0^{1-t}\int_{{u_1}+t}^1\int_{u_2}^1\int_{u_3}^1...\int_{u_{n-1}}^1 du_n....du_4 du_3 du_2 du_1 = (1-t)^n
 \end{eqnarray*}
-.
-
 \begin{figure}[h]
 \centering
 \includegraphics[scale=.4,trim=1in 5in 0 0, clip=true]{rank3d-nocolour}
 \caption{The figure explains the probability estimation for the $n=3$ case. The rank statistics probability density is $3!=6$ and it uniformly scattered in (0,0,0), (0,0,1), (0,1,1), (1,1,1) tetrahedron. The $u_2 - u_1 \ge t$ condition holds only in the (0,t,t), (0,t,1), (0,1,1), (1-t,1,1) small tetrahedron.}
 \end{figure}
-
-
 To assess the p-value for a feature $i$, we do not need to rank the whole $r_{ij}, j=1..n$ vector to build the rank statistics $u_j$; we actually need only the $t$ value, so it is enough to find the maximal and the second values of $r_{ij}$. After the correction this p-value for multiple hypothesis testing (each feature provides its own null hypothesis), we identify the statistically significant pairs of a feature (marker) and entity (its best friend).
 
 %\subsection{Multiple marker rank statistics}
-Now, let's suppose that an entity has more than one features, that almost equally good marks it, for example, two genes has nonzero load in a pattern. The pattern is the best friend for both of them, and each of them or their combination is a unique marker for the pattern, but the single marker rank statistics cannot find them, for the distance $u_2-u_1$ is quite low: the markers are almost equally good.
+Now, let's suppose one feature almost equally good marks two or more (say $k$) features, e.g. it discriminates these $k$ from the remanding $n-k+1$. An example is: a gene has high load in a few  patterns. Each of the patterns is the best friend for the gene, and distance $u_2-u_1$ (as well as $u_3-u_2$ if $k \ge 3$, etc) is quite low, but the $u_{k+1}-u_k$ distance is unexpectedly high for the null hypothesis. Amazingly, the p-value has the same value:
+
+\begin{eqnarray*}
+& p_k(t) = \displaystyle \frac{1}{V}\displaystyle \int_0^{1-t}\int_{{u_1}}^{1-t}...\int_{u_{k-1}}^{1-t}\int_{u_k+t}^1...\int_{u_{n-1}}^1 du_n... du_1 =  (1-t)^n \label{eq:p_k}
+\end{eqnarray*}
 
 %\subsection*{Notes and comments}
 
@@ -73,7 +70,7 @@ For a symmetric case, sometimes it makes sense to remove the main diagonal befor
 
 %\section{Discussion}
 
-We formulated a statistical test that to detest reliable pairs of marker feature and the marked entity (AKA best friend of the feature). Nevertheless the formulation of the problem looks abstract, its solution provides numerous straightforward application. The motivating example we started with was to detect the marker genes for expression patterns. The patterns could be obtained from the CoGAPS (scCoGAPS) \cite{Fertig_2016} or other matrix factorisation method \cite{Stein_2018}. The identification of the marker genes can critically simplify biological interpretation. If the matrix is the amplitude component from  the decomposition, the marker time points (or, the marker cells for scCoGAPS) can also be very informative for analysis. If the matrix contains the expression correlation for two gene sets, annotated best friends of an non-annotated gene extend the existing annotation.
+We formulated a statistical test to detect reliable pairs of marker feature and the marked entity (AKA best friend of the feature). Nevertheless the formulation of the problem looks abstract, its solution provides numerous straightforward application. The motivating example we started with was to detect the marker genes for expression patterns. The patterns could be obtained from the CoGAPS (scCoGAPS) \cite{Fertig_2016} or other matrix factorisation method \cite{Stein_2018}. The identification of the marker genes can simplify the biological interpretation. If the matrix is the amplitude component from  the decomposition, the marker time points (or, the marker cells for scCoGAPS) can also be very informative for analysis. If the relation matrix represents expression correlations for two gene sets, annotated best friends of an non-annotated gene extend the existing annotation.
 
 AF acknowledges support by National Institutes of Health (NIH) grants P30CA006973 and 1U01CA253403-01 and by the Russian Academy of Sciences Project 0112-2019-0001; VR acknowledges support from Russia Foundation for Basic Research (RFBR) grant 20-54-12008; AM acknowledges support from RFBR grant 20-04-00459.
 

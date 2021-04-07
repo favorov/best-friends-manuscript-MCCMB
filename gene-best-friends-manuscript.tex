@@ -1,30 +1,119 @@
 \documentclass[12pt]{article}
 \usepackage{sty}
+\usepackage{graphicx}
+\usepackage{url}
 
 \begin{document}
 % ------------------------TITLE----------------------------
 
 \title{Telling the story of best friends: marker rank statistics}
 \authors{Alexander Favorov \\ 
-\place{Johns Hopkins University School of Medicine, Baltimore, MD 21205, USA; \\
-Vavilov Institute of General Genetics, RAS, Moscow, 119333, RF} \\
+\place{Johns Hopkins University School of Medicine, Baltimore, MD 21205, USA \\
+Vavilov Institute of General Genetics, RAS, Moscow, 119333, Russia} \\
 \email{favorov@sensi.org}}
+\authors{Vasiliy Ramensky \\
+\place{
+National Health and Research Center of Preventive Healthcare, Moscow, 101990, Russia}}
+\authors{Andrey Mironov \\
+\place{
+Faculty of Bioengineering and Bioinformatics, MSU, Moscow, 119992, Russia \\
+Institute for Information Transmission Problems, RAS, Moscow, 127994, Russia
+}}
 
 % ---------------------------------------------------------
 \vspace{6mm}
 
-The text of the abstract: up to four pages.
+\textbf{Abstract:  }Suppose we have a set of features and a set of entities, and a we have the strength of the feature-to-entity relations quantified (obviously, the quantities populate an features*entities matrix). Possible example is: features are genes, entities are gene expression patterns, and values are loads of the genes in the patterns. Sometimes, expression of a gene implies expression of a particular pattern (the simplest case is: the gene has nonzero load only in that pattern). If so, we say that the gene marks the pattern. Here we describe a statistical test that identify pairs of a marker feature and the marked entity. The test is based on rank statistics and it does not rely on propositions about the distribution of the relation quantity. The marked entity is referred to as the feature's best friend, and the test is named "the best friends test" or "the gene's best friends test". The statistics is naturally expand to the case when a feature selects (separates) a subset of entities, thus having more than one best friend. The R code is available at \url{https://github.com/favorov/best-friends}
+%
+%\section{Introduction: friends and markers}
 
-Acknowledgements can be given at the end (as a separate untitled paragraph). The style for references is given below (preferably with titles, if the space allows).
+Let's picture a set of genes and their loads in expression patterns. The patterns describe the expression of the genes in some process. Sometimes, we can conclude that a pattern is expressed from expression of a single gene. The simplest case that allows this inference is when the gene has nonzero load in only one pattern. The situation when other loads are just relatively small, also fits the inference. We will refer to the gene as marker gene and to the pattern as the best friend of the gene. We want to identify the marker genes and their best friends given the load matrix.
+
+We formulated \cite{best_friends:2015} the similar task in a symmetric form on gene expression data as searching for genes that are best friends of genes. Best friend of a gene $G_i$ is another gene $G_j$ that is expressed concertedly with the gene $G_i$, while other genes $G_k, k\neq i, k \neq j$ are (almost) not. The best friend is unique, while one gene can be the best friend for more than one gene. The solution we proposed (rank backwards ranking) showed the putative pairs of marker and its best friend, but it did not provide either statistical measure or an effect size estimate. Later, the problem was also formulated in an asymmetric setup \cite{patternmarkers:2017} for genes and expression patterns, and the solution was to scale each gene's loads to $max((\mbox{all loads for this gene})==1$ and calculate the Euclidean distance between the scaled vector of loads and the ideal $(0,0,...,1,...0$). The less the distance is, the better the marker is. 
+
+Let's make a generalisation. We have entities and features and a matrix that show how strong is a feature ascribed to an entity. We want to identify those features that reliably and uniquely identify an entity. Let's call the feature the entity's marker and let's call the entity the feature's best friend. Here, we describe a rank test identifying significant pairs of marker feature and its best friend entity.
+%
+%\section{Method}
+%\subsection{Ranking}
+Let's say we have an $P_{ij}$ matrix that represent the strength of relation between $k$ features and $n$ entities. We want to identify all entities that are preferably selected (marked) by one or more features. Such a feature is a marker for the entity, and the entity is the best friend for the feature.
+First, we rank all the features by its $P_{ij}$ for each entity $j$, so obtaining $R_{ij}= \textrm{rank of } P_{ij} \textrm{ in } P_{*j}$. Then, we scale $R$ into $[0..1]$ : $r_{ij}={R_{ij}}/{k}$. To be specific, we suppose that the ranking is ascending, the smaller is the rank, the stronger is the relation.
+
+%\subsection{Single marker rank statistics}
+For each feature $i,i=1..k$, we obtain a vector $r_{ij}, j=1..n$. There are normalised ranks of the feature in different entities, in the a null hypothesis they are uniformly i.i.d. in [0,1]. Let's create a rank statistics $u_i$ by ordering their values. If a feature is a unique marker for an entity, the entity corresponds to the first  value $u_1$. Let's use the difference $u_2-u_1$ as a measure of uniqueness (quality of the marker). Indeed, if we see that the difference is significantly higher than we can expect if null hypothesis holds, we can conclude that the feature unexpectedly prefer the entity, so it is a marker (and the entity is its best friend). Similarly to the density estimation for each $u_i$ (see, e.g. \cite{Gut:2009}) we estimate the probability to observe the difference $u_2 - u_1 \ge t$. 
+
+First, the whole n-dimension (nD) volume of ranked variables $u_1 .. u_n$ is:
+\begin{eqnarray*}
+V = &\displaystyle \int_0^1\int_{u_1}^1\int_{u_2}^1\int_{u_3}^1...\int_{u_{n-1}}^1 du_n....du_4 du_3 du_2 du_1 =  \frac{1}{n!}
+\end{eqnarray*}
+.
+
+Let's denote the p-value for the observation $t=u_2-u_1$ as $p_1(t)$. $p_1(t)$ is the ratio of nD, that is limited by $t<=u_2-u_1$ condition, and $V$.
+
+\begin{eqnarray*}
+p(t) = & \displaystyle\frac{1}{V} \displaystyle \int_0^{1-t}\int_{{u_1}+t}^1\int_{u_2}^1\int_{u_3}^1...\int_{u_{n-1}}^1 du_n....du_4 du_3 du_2 du_1 = (1-t)^n
+\end{eqnarray*}
+.
+
+\begin{figure}[h]
+\centering
+\includegraphics[scale=.4,trim=1in 5in 0 0, clip=true]{rank3d-nocolour}
+\caption{The figure explains the probability estimation for the $n=3$ case. The rank statistics probability density is $3!=6$ and it uniformly scattered in (0,0,0), (0,0,1), (0,1,1), (1,1,1) tetrahedron. The $u_2 - u_1 \ge t$ condition holds only in the (0,t,t), (0,t,1), (0,1,1), (1-t,1,1) small tetrahedron.}
+\end{figure}
+
+
+To assess the p-value for a feature $i$, we do not need to rank the whole $r_{ij}, j=1..n$ vector to build the rank statistics $u_j$; we actually need only the $t$ value, so it is enough to find the maximal and the second values of $r_{ij}$. After the correction this p-value for multiple hypothesis testing (each feature provides its own null hypothesis), we identify the statistically significant pairs of a feature (marker) and entity (its best friend).
+
+%\subsection{Multiple marker rank statistics}
+Now, let's suppose that an entity has more than one features, that almost equally good marks it, for example, two genes has nonzero load in a pattern. The pattern is the best friend for both of them, and each of them or their combination is a unique marker for the pattern, but the single marker rank statistics cannot find them, for the distance $u_2-u_1$ is quite low: the markers are almost equally good.
+
+%\subsection*{Notes and comments}
+
+For a symmetric case, sometimes it makes sense to remove the main diagonal before ranking not to obtain trivial self-relations.
+
+
+%\section{Discussion}
+
+We formulated a statistical test that to detest reliable pairs of marker feature and the marked entity (AKA best friend of the feature). Nevertheless the formulation of the problem looks abstract, its solution provides numerous straightforward application. The motivating example we started with was to detect the marker genes for expression patterns. The patterns could be obtained from the CoGAPS (scCoGAPS) \cite{Fertig_2016} or other matrix factorisation method \cite{Stein_2018}. The identification of the marker genes can critically simplify biological interpretation. If the matrix is the amplitude component from  the decomposition, the marker time points (or, the marker cells for scCoGAPS) can also be very informative for analysis. If the matrix contains the expression correlation for two gene sets, annotated best friends of an non-annotated gene extend the existing annotation.
+
+AF acknowledges support by National Institutes of Health (NIH) grants P30CA006973 and 1U01CA253403-01 and by the Russian Academy of Sciences Project 0112-2019-0001; VR acknowledges support from Russia Foundation for Basic Research (RFBR) grant 20-54-12008; AM acknowledges support from RFBR grant 20-04-00459.
 
 % ---------------------------------------------------------
 \vspace{2mm}
 
-1. A.Uthor, O.N.E.More (2003) Title of the paper, \textit{Journal, }\textbf{12:}13–16.
+\begingroup
+\renewcommand{\section}[2]{}%
+\begin{thebibliography}{}
+\providecommand{\url}[1]{\texttt{#1}}
+\providecommand{\urlprefix}{URL }
 
-2. A.U.Thor et al. (2003) Title of the paper, \textit{Journal, }\textbf{12:}13–16.
+\bibitem{best_friends:2015}
+Favorov, A. et~al (2015) Genes that are best friends: rank-backwards-rank 
+	analysis of correlation matrix. \textit{Proceedings of the MCCMB 2015}
 
-3. A.Uthor (2003) Title of the chapter, In: \textit{The Book,} E.D.Itor et al. (Eds.), 13–16 (Publisher).
+\bibitem{Fertig_2016}
+Fertig, E.J. et~al (2016) Cogaps
+  matrix factorization algorithm identifies transcriptional changes in
+  ap-2alpha target genes in feedback from therapeutic inhibition of the egfr
+  network. \textit{Oncotarget, }\textbf{7(45):}73845–73864. 
+
+\bibitem{Gut:2009}
+Gut, A. (2009) \textit{Order Statistics, } 101–116 (Springer Texts in Statistics). 
+
+\bibitem{Stein_2018}
+Stein-O’Brien, G.L. et~al (2018): Enter the
+  matrix: Factorization uncovers knowledge from omics. \textit{Trends in genetics, } \textbf{34(10):}790-805.
+
+\bibitem{patternmarkers:2017}
+Stein-O’Brien et~al.:
+  PatternMarkers \& GWCoGAPS (2017) for novel data-driven biomarkers via whole
+  transcriptome NMF. \textit{Bioinformatics} \textbf{33(12):}1892-1894.
+\end{thebibliography}
+\endgroup
+%1. A.Uthor, O.N.E.More (2003) Title of the paper, \textit{Journal, }\textbf{12:}13–16.
+
+%2. A.U.Thor et al. (2003) Title of the paper, \textit{Journal, }\textbf{12:}13–16.
+
+%3. A.Uthor (2003) Title of the chapter, In: \textit{The Book,} E.D.Itor et al. (Eds.), 13–16 (Publisher).
 
 \end{document}
 % This is LLNCS.DEM the demonstration file of

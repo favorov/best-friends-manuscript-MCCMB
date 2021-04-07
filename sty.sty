@@ -1,0 +1,38 @@
+\usepackage[driver=xetex,paper=a4paper,left=2.54cm,right=2.54cm,top=3.81cm,bottom=3.81cm]{geometry}
+
+\usepackage{fontspec}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{soul}
+\usepackage{array}
+\usepackage{amssymb}
+
+\pagenumbering{gobble}
+\topsep=0pt
+\parindent=0pt
+
+\setmainfont{Times New Roman}
+\setsansfont{Arial}
+\setmonofont{Courier New}
+
+\renewcommand{\title}[1]{%
+\begin{center}
+    {\sffamily\bfseries #1}
+\end{center}
+\vspace*{2mm}
+}
+
+\newcommand{\authors}[1]{%
+\vspace*{-3.5mm}
+\begin{center}
+    #1
+\end{center}
+%\vspace*{1mm}
+}
+
+\newcommand{\place}[1]{{\small\itshape #1}}
+\newcommand{\email}[1]{{\ttfamily\footnotesize\itshape #1}}
+
+\renewcommand{\baselinestretch}{1.38}
+\setlength{\parskip}{1.86mm}
+
